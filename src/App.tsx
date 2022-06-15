@@ -1,24 +1,38 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useCallback, useEffect } from "react";
+import "./App.css";
+import { useCanvas } from "./providers/CanvasProvider";
+import { clearCanvas, setCanvasSize } from "./utils/canvas";
+
+const WIDTH = 1024;
+const HEIGHT = 768;
 
 function App() {
+  const canvasRef = useCanvas();
+
+  const getCanvasWithContext = useCallback(
+    (canvas = canvasRef.current) => {
+      return {
+        canvas,
+        context: canvas?.getContext("2d"),
+      };
+    },
+    [canvasRef]
+  );
+
+  useEffect(() => {
+    const { canvas, context } = getCanvasWithContext();
+    if (canvas && context) {
+      setCanvasSize(canvas, WIDTH, HEIGHT);
+      context.lineJoin = "round";
+      context.lineCap = "round";
+      context.lineWidth = 5;
+      clearCanvas(canvas);
+    }
+  }, [getCanvasWithContext]);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <canvas ref={canvasRef} />
     </div>
   );
 }
