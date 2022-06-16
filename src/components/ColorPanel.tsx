@@ -1,10 +1,14 @@
+import { useDispatch } from "react-redux";
+import { setStrokeColor } from "../store/actions";
 import { COLORS } from "../utils/colors";
 
-interface ColorPanelProps {
-  onColorChange: (color: string) => void;
-}
+const ColorPanel = () => {
+  const dispatch = useDispatch();
 
-const ColorPanel = ({ onColorChange }: ColorPanelProps) => {
+  const onColorChange = (color: string) => {
+    dispatch(setStrokeColor(color));
+  };
+
   return (
     <div className="color-panel">
       <div className="colors">

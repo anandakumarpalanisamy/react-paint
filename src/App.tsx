@@ -1,14 +1,26 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import "./App.css";
 import ColorPanel from "./components/ColorPanel";
+import { RootState } from "./models/types";
 import { useCanvas } from "./providers/CanvasProvider";
-import { clearCanvas, setCanvasSize } from "./utils/canvas";
+import { beginStroke, endStroke, updateStroke } from "./store/actions";
+import { currentStrokeSelector } from "./store/rootReducer";
+import { clearCanvas, drawStroke, setCanvasSize } from "./utils/canvas";
 
 const WIDTH = 1024;
 const HEIGHT = 768;
 
 function App() {
   const canvasRef = useCanvas();
+
+  const isDrawing = useSelector<RootState>(
+    (state) => !!state.currentStroke.points.length
+  );
+  const currentStroke = useSelector<RootState, RootState["currentStroke"]>(
+    currentStrokeSelector
+  );
+  const dispatch = useDispatch();
 
   const getCanvasWithContext = useCallback(
     (canvas = canvasRef.current) => {
@@ -19,13 +31,6 @@ function App() {
     },
     [canvasRef]
   );
-
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [color, setColor] = useState("#000000");
-
-  const onColorChange = (color: string) => {
-    setColor(color);
-  };
 
   useEffect(() => {
     const { canvas, context } = getCanvasWithContext();
@@ -38,32 +43,31 @@ function App() {
     }
   }, [getCanvasWithContext]);
 
+  useEffect(() => {
+    const { context } = getCanvasWithContext();
+    if (!context) return;
+    requestAnimationFrame(() => {
+      drawStroke(context, currentStroke.points, currentStroke.color);
+    });
+  }, [currentStroke, getCanvasWithContext]);
+
   const startDrawing = ({
     nativeEvent,
   }: React.MouseEvent<HTMLCanvasElement>) => {
     const { offsetX, offsetY } = nativeEvent;
-    const { context } = getCanvasWithContext();
-    if (context) {
-      context.beginPath();
-      context.moveTo(offsetX, offsetY);
-      setIsDrawing(true);
-    }
+    dispatch(beginStroke(offsetX, offsetY));
   };
 
   const draw = ({ nativeEvent }: React.MouseEvent<HTMLCanvasElement>) => {
     const { offsetX, offsetY } = nativeEvent;
-    const { context } = getCanvasWithContext();
-    if (!isDrawing || !context) return;
-    context.lineTo(offsetX, offsetY);
-    context.strokeStyle = color;
-    context.stroke();
+    if (!isDrawing) return;
+    dispatch(updateStroke(offsetX, offsetY));
   };
 
   const endDrawing = () => {
-    const { context } = getCanvasWithContext();
-    if (!context || !isDrawing) return;
-    context.closePath();
-    setIsDrawing(false);
+    if (isDrawing) {
+      dispatch(endStroke());
+    }
   };
 
   return (
@@ -76,7 +80,7 @@ function App() {
         ref={canvasRef}
       />
       <div className="panels">
-        <ColorPanel onColorChange={onColorChange} />
+        <ColorPanel />
       </div>
     </div>
   );

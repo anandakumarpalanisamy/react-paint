@@ -4,15 +4,19 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { CanvasProvider } from "./providers/CanvasProvider";
+import { Provider } from "react-redux";
+import { store } from "./store";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <CanvasProvider>
-      <App />
-    </CanvasProvider>
+    <Provider store={store}>
+      <CanvasProvider>
+        <App />
+      </CanvasProvider>
+    </Provider>
   </React.StrictMode>
 );
 
