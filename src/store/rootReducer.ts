@@ -5,11 +5,14 @@ import {
   UPDATE_STROKE,
   END_STROKE,
   SET_STROKE_COLOR,
+  UNDO,
+  REDO,
 } from "./actions";
 
 const initialState: RootState = {
   currentStroke: { points: [], color: "#000000" },
   strokes: [],
+  historyIndex: 0,
 };
 
 export const rootReducer = (
@@ -37,10 +40,12 @@ export const rootReducer = (
       if (!state.currentStroke.points.length) {
         return state;
       }
+      const historyIndex = state.strokes.length - state.historyIndex;
       return {
         ...state,
+        historyIndex: 0,
         currentStroke: { ...state.currentStroke, points: [] },
-        strokes: [...state.strokes, state.currentStroke],
+        strokes: [...state.strokes.slice(0, historyIndex), state.currentStroke],
       };
     case SET_STROKE_COLOR:
       return {
@@ -50,9 +55,24 @@ export const rootReducer = (
           ...{ color: action.payload },
         },
       };
+    case UNDO: {
+      const historyIndex = Math.min(
+        state.historyIndex + 1,
+        state.strokes.length
+      );
+      return { ...state, historyIndex };
+    }
+    case REDO: {
+      const historyIndex = Math.max(state.historyIndex - 1, 0);
+      return { ...state, historyIndex };
+    }
     default:
       return state;
   }
 };
 
 export const currentStrokeSelector = (state: RootState) => state.currentStroke;
+
+export const historyIndexSelector = (state: RootState) => state.historyIndex;
+
+export const strokesSelector = (state: RootState) => state.strokes;
