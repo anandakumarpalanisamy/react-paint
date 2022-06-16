@@ -1,13 +1,5 @@
-import { RootState } from "../models/types";
-import {
-  Action,
-  BEGIN_STROKE,
-  UPDATE_STROKE,
-  END_STROKE,
-  SET_STROKE_COLOR,
-  UNDO,
-  REDO,
-} from "./actions";
+import { Point, RootState } from "../models/types";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 const initialState: RootState = {
   currentStroke: { points: [], color: "#000000" },
@@ -15,61 +7,48 @@ const initialState: RootState = {
   historyIndex: 0,
 };
 
-export const rootReducer = (
-  state: RootState = initialState,
-  action: Action
-): RootState => {
-  switch (action.type) {
-    case BEGIN_STROKE:
-      return {
-        ...state,
-        currentStroke: {
-          ...state.currentStroke,
-          points: [action.payload],
-        },
-      };
-    case UPDATE_STROKE:
-      return {
-        ...state,
-        currentStroke: {
-          ...state.currentStroke,
-          points: [...state.currentStroke.points, action.payload],
-        },
-      };
-    case END_STROKE:
-      if (!state.currentStroke.points.length) {
-        return state;
-      }
+export const slice = createSlice({
+  name: "appState",
+  initialState,
+  reducers: {
+    beginStroke: (state: RootState, action: PayloadAction<Point>) => {
+      state.currentStroke.points = [action.payload];
+    },
+    updateStroke: (state: RootState, action: PayloadAction<Point>) => {
+      state.currentStroke.points.push(action.payload);
+    },
+    endStroke: (state: RootState) => {
       const historyIndex = state.strokes.length - state.historyIndex;
-      return {
-        ...state,
-        historyIndex: 0,
-        currentStroke: { ...state.currentStroke, points: [] },
-        strokes: [...state.strokes.slice(0, historyIndex), state.currentStroke],
-      };
-    case SET_STROKE_COLOR:
-      return {
-        ...state,
-        currentStroke: {
-          ...state.currentStroke,
-          ...{ color: action.payload },
-        },
-      };
-    case UNDO: {
-      const historyIndex = Math.min(
+      const currentStroke = { ...state.currentStroke };
+      state.strokes = [...state.strokes.slice(0, historyIndex), currentStroke];
+      state.currentStroke.points = [];
+      state.historyIndex = 0;
+    },
+    setStrokeColor: (state: RootState, action: PayloadAction<string>) => {
+      state.currentStroke.color = action.payload;
+    },
+    undo: (state: RootState) => {
+      state.historyIndex = Math.min(
         state.historyIndex + 1,
         state.strokes.length
       );
-      return { ...state, historyIndex };
-    }
-    case REDO: {
-      const historyIndex = Math.max(state.historyIndex - 1, 0);
-      return { ...state, historyIndex };
-    }
-    default:
-      return state;
-  }
-};
+    },
+    redo: (state: RootState) => {
+      state.historyIndex = Math.max(state.historyIndex - 1, 0);
+    },
+  },
+});
+
+export default slice.reducer;
+
+export const {
+  beginStroke,
+  updateStroke,
+  endStroke,
+  setStrokeColor,
+  undo,
+  redo,
+} = slice.actions;
 
 export const currentStrokeSelector = (state: RootState) => state.currentStroke;
 

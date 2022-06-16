@@ -1,5 +1,5 @@
 import { useDispatch } from "react-redux";
-import { setStrokeColor } from "../store/actions";
+import { setStrokeColor } from "../store/rootReducer";
 import { COLORS } from "../utils/colors";
 
 const ColorPanel = () => {

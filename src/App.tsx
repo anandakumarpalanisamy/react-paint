@@ -5,8 +5,10 @@ import ColorPanel from "./components/ColorPanel";
 import EditPanel from "./components/EditPanel";
 import { RootState } from "./models/types";
 import { useCanvas } from "./providers/CanvasProvider";
-import { beginStroke, endStroke, updateStroke } from "./store/actions";
 import {
+  beginStroke,
+  updateStroke,
+  endStroke,
   currentStrokeSelector,
   historyIndexSelector,
   strokesSelector,
@@ -74,13 +76,13 @@ function App() {
     nativeEvent,
   }: React.MouseEvent<HTMLCanvasElement>) => {
     const { offsetX, offsetY } = nativeEvent;
-    dispatch(beginStroke(offsetX, offsetY));
+    dispatch(beginStroke({ x: offsetX, y: offsetY }));
   };
 
   const draw = ({ nativeEvent }: React.MouseEvent<HTMLCanvasElement>) => {
     const { offsetX, offsetY } = nativeEvent;
     if (!isDrawing) return;
-    dispatch(updateStroke(offsetX, offsetY));
+    dispatch(updateStroke({ x: offsetX, y: offsetY }));
   };
 
   const endDrawing = () => {
